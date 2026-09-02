@@ -69,3 +69,8 @@ jobs:
 
       - name: Lint de routers (referências × índice git)
         run: python tools/lint_routers.py
+
+      # A régua do padrão ouro, no repo-template: placeholders permitidos. No repo
+      # instanciado, troque por `python tools/padrao_ouro_audit.py .` (sem --template).
+      - name: Auditor do padrão ouro
+        run: python tools/padrao_ouro_audit.py --tipo cockpit --template .

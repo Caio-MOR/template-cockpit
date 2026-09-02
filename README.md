@@ -31,7 +31,7 @@ Os mesmos comandos do CI (`.github/workflows/tests.yml`), rodados com o Python d
 
 - `python tools/gate_veredito.py` — esperado `veredito: VERDE` (guarda de conteúdo + canário + suíte).
 - `python tools/lint_routers.py` — esperado `0 erro(s)`.
-- `python tools/padrao_ouro_audit.py --tipo cockpit .` — auditor do padrão (adicionado em separado; confere que o repo instanciado continua no padrão do template).
+- `python tools/padrao_ouro_audit.py --tipo cockpit .` — auditor do padrão ouro: placar 0–10 e a lista do que falta, com arquivo e linha. No template ele roda com `--template` (placeholders permitidos); no repo instanciado, sem a flag. Está no padrão quem mede 9 ou mais.
 
 ## O que é cada peça e por quê
 
