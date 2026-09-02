@@ -238,7 +238,8 @@ def chk_c02(repo, tipo, template):
             if not RE_SHA40.search(alvo):
                 out.append(Reprovacao("PO-C02", f"{wf}:{n}", f"`uses: {alvo}` sem SHA de 40 hex"))
         if not RE_PERMISSIONS.search(t):
-            out.append(Reprovacao("PO-C02", wf, "sem chave `permissions:`"))
+            # Ausência não tem linha natural; cita a 1 para manter o contrato `arquivo:linha`.
+            out.append(Reprovacao("PO-C02", f"{wf}:1", "sem chave `permissions:`"))
     return out
 
 
