@@ -1,0 +1,39 @@
+# Allowlist (nega-tudo): o git versiona o que se LIBERA, não o que se esquece de negar.
+# Um cockpit acumula planilhas, logs, .env e saídas de rotina ao lado do código; com
+# deny-por-padrão, arquivo novo nunca entra por acidente — entrar é decisão explícita
+# (uma linha `!` aqui). O preço é lembrar de liberar o que nasce; o lint de routers
+# acusa referência a caminho que ficou fora do índice git.
+/*
+
+# Raiz — um a um
+!/.gitignore
+!/.gitattributes
+!/CLAUDE.md
+!/AGENTS.md
+!/README.md
+!/requirements.txt
+!/pytest.ini
+!/conftest.py
+!/.python-version
+
+# Pastas versionadas
+!/.github/
+!/.claude/
+!/tools/
+!/docs/
+!/tests/
+!/workflows/
+!/.specs/
+
+# Logs de rotina ficam na máquina; só o .gitkeep entra para a pasta existir no clone
+workflows/*/logs/*
+!workflows/*/logs/.gitkeep
+
+# Em qualquer profundidade
+.env
+.env.*
+.claude/settings.local.json
+__pycache__/
+*.pyc
+.pytest_cache/
+.tmp/

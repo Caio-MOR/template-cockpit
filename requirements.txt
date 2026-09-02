@@ -1,0 +1,3 @@
+# Dependências de teste — CI e máquina limpa.
+# Uso: pip install -r requirements.txt  (Python 3.12 — ver .python-version)
+pytest>=8

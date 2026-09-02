@@ -1,0 +1,71 @@
+name: tests
+
+# Gate mecânico do repo: o veredito da suíte e o lint de routers rodam em todo push
+# na main e toda PR — a verificação deixa de depender de memória humana.
+# Um workflow por preocupação (o de segredos é o gitleaks.yml).
+#
+# Por que a matriz de SO: gate que só roda num SO é gate PRESUMIDO, não verificado.
+# Cada plataforma produz achado que as outras não pegam (CRLF + shebang que só quebra
+# no Windows; `Path.is_absolute()` que é no-op fora dele). `gitleaks.yml` fica fora da
+# matriz de propósito: varre conteúdo do histórico, não comportamento de plataforma.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    name: suite-pytest
+    strategy:
+      # fail-fast: false para ver os três veredictos; SO que passa também é dado.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Python (versão do .python-version)
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version-file: .python-version
+
+      - name: Dependências (só requirements.txt)
+        run: pip install -r requirements.txt
+
+      # O veredito, e não `pytest -q` direto: quem julga a suíte não pode ser o
+      # próprio pytest. Ele roda a guarda de conteúdo (AST), o canário e a suíte em
+      # subprocessos de ambiente limpo, e só devolve 0 com os três ramos verdes.
+      # Com um hook de resultado no conftest.py da raiz, `pytest -q` devolve exit 0
+      # com veneno ativo.
+      - name: Veredito dos gates (guarda de conteúdo + canário + suíte)
+        run: python tools/gate_veredito.py
+
+  lint-routers:
+    name: lint-de-routers
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # O lint é stdlib pura e segue sem pip. O setup-python entra só para dar
+      # um nome de executável que exista nos três runners: `python3` não é
+      # confiável no Windows (lá o binário é `python`, e o alias do Store
+      # sequestra `python3`), e `python` sem setup não existe no runner do
+      # macOS. Com o setup, `python` vale para os três.
+      - name: Python (versão do .python-version)
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version-file: .python-version
+
+      - name: Lint de routers (referências × índice git)
+        run: python tools/lint_routers.py

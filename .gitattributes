@@ -1,0 +1,9 @@
+# Fim de linha normalizado: o repo guarda LF, cada máquina recebe o nativo.
+* text=auto
+
+# Scripts de shell do Windows precisam de CRLF para o interpretador nativo;
+# shebang + CRLF quebra script Unix, então esses ficam em LF em qualquer máquina.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.vbs text eol=crlf
+*.sh  text eol=lf
