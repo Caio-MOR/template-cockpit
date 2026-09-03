@@ -1,0 +1,58 @@
+name: tests-macos
+
+# Verificação semanal em macOS (herdada da PR Caio-MOR/Cakopit#14): o macOS saiu da
+# matriz de `tests.yml` porque custava 10x o minuto do ubuntu, sem rodar em todo push.
+# Ele não desaparece — vira gate agendado, porque "só roda num SO" é gate presumido
+# (achado real de outro cockpit: `Path.is_absolute()` no-op fora do Windows).
+# Mesma suíte + lint de `tests.yml`, só que na cadência de uma vez por semana em vez
+# de a cada commit.
+
+on:
+  schedule:
+    - cron: '0 9 * * 1' # segunda-feira, 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    name: suite-pytest
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Python (versão do .python-version)
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+
+      - name: Dependências (só requirements.txt)
+        run: pip install -r requirements.txt
+
+      - name: Veredito dos gates (guarda de conteúdo + canário + suíte)
+        run: python tools/gate_veredito.py
+
+  lint-routers:
+    name: lint-de-routers
+    runs-on: macos-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Python (versão do .python-version)
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version-file: .python-version
+
+      - name: Lint de routers (referências × índice git)
+        run: python tools/lint_routers.py
+
+      # A régua do padrão ouro, no repo-template: placeholders permitidos. No repo
+      # instanciado, troque por `python tools/padrao_ouro_audit.py .` (sem --template).
+      - name: Auditor do padrão ouro
+        run: python tools/padrao_ouro_audit.py --tipo cockpit --template .

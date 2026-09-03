@@ -48,7 +48,7 @@ Os mesmos comandos do CI (`.github/workflows/tests.yml`), rodados com o Python d
 - `docs/` — referência durável com router; começa vazia de propósito.
 - `.specs/` — decisões (`STATE.md`) e lições (`LESSONS.md`) versionadas: o porquê é o que a próxima sessão não reconstrói sozinha.
 - `.claude/` — rules que carregam na sessão, sub-agente verificador (autor ≠ verificador), commands de gate e hooks de aviso de compactação.
-- `.github/` — veredito + lint em três sistemas operacionais (gate de um SO só é gate presumido) e varredura de segredos com binário pinado por checksum.
+- `.github/` — veredito + lint em matriz enxuta (`tests.yml`: ubuntu sempre, +windows só em PR) com macOS verificado semanalmente em `tests-macos.yml` (gate de um SO só é gate presumido) e varredura de segredos com binário pinado por checksum.
 
 ## Memória do agente (opcional)
 
