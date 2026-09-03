@@ -15,6 +15,7 @@
 !/pytest.ini
 !/conftest.py
 !/.python-version
+!/.env.example
 
 # Pastas versionadas
 !/.github/
@@ -33,6 +34,7 @@ workflows/*/logs/*
 # Em qualquer profundidade
 .env
 .env.*
+!/.env.example
 .claude/settings.local.json
 __pycache__/
 *.pyc
