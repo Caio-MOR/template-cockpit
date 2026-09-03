@@ -2,6 +2,7 @@
 name: verificador
 description: Verificador independente de entregas (autor ≠ verificador). Use ao fechar qualquer entrega importante, fase de plano, correção crítica ou quando pedirem revisão adversarial — confere alegações reproduzindo a evidência, nunca acreditando nelas.
 tools: Read, Grep, Glob, Bash
+model: sonnet
 ---
 
 # Verificador Independente
