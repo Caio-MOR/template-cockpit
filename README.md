@@ -64,4 +64,4 @@ Depois, no clone novo: substituir todos os placeholders `{{...}}` (`{{NOME_DO_RE
 
 ---
 
-Template criado por **Caio Kohn** (Metalúrgica Mor) como padrão de cockpit WAT da organização.
+Criado por Caio Kohn
