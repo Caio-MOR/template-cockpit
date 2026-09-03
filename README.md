@@ -60,7 +60,12 @@ A memória automática do Claude Code vive **fora do repo**, no diretório de me
 gh repo create <novo-repo> --template {{DONO}}/template-cockpit --private
 ```
 
-Depois, no clone novo: substituir todos os placeholders `{{...}}` (`{{NOME_DO_REPO}}`, `{{DONO}}`, `{{DESCRICAO}}`, `{{IDIOMA}}`), criar o `.venv` (seção acima), rodar os dois gates e o auditor. O primeiro commit do repo instanciado deve sair com o veredito VERDE e o lint em `0 erro(s)`.
+Depois, no clone novo, é o **agente** quem executa este checklist ao abrir a primeira sessão — o humano só decide nome, descrição e idioma:
+
+1. Se houver `{{...}}` em qualquer arquivo do repo, perguntar ao usuário, em linguagem simples (sem jargão técnico), o nome do projeto, uma descrição curta e o idioma padrão — e substituir todas as ocorrências.
+2. Criar o `.venv` conforme a seção "Como rodar" acima.
+3. Rodar os dois gates e o auditor **sem** `--template` (a instância real não tem mais placeholder para desculpar).
+4. Primeiro commit em branch + PR, colando na entrega o veredito `VERDE`, o `0 erro(s)` do lint e o placar do auditor.
 
 ---
 
