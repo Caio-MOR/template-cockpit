@@ -40,7 +40,7 @@ Os mesmos comandos do CI (`.github/workflows/tests.yml`), rodados com o Python d
 - `README.md` — porta de entrada humana; o lint confere as referências dele também, porque drift aqui envenena igual.
 - `.gitignore` em allowlist — o git versiona o que se libera, não o que se esquece de negar; arquivo novo nunca entra por acidente.
 - `.gitattributes` — LF no repo, nativo na máquina; `.bat`/`.vbs` em CRLF porque o interpretador do Windows exige.
-- `.python-version` / `requirements.txt` — CI e máquina limpa instalam exatamente o mesmo ambiente.
+- `.python-version` / `requirements.txt` — CI e máquina limpa instalam o mesmo Python e as mesmas dependências fixadas por major (sem lock, então o patch pode variar).
 - `pytest.ini` / `conftest.py` — réguas da suíte fora de `tests/`: guarda que mora dentro do que vigia some junto.
 - `tools/` — scripts determinísticos com router próprio; o veredito e o lint moram aqui porque são ferramentas, não testes.
 - `tests/` — um arquivo por gate; cada gate tem teste sintético que prova que ele REPROVA, não só que passa.
