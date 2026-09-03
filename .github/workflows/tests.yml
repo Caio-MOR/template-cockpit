@@ -8,23 +8,44 @@ name: tests
 # Cada plataforma produz achado que as outras não pegam (CRLF + shebang que só quebra
 # no Windows; `Path.is_absolute()` que é no-op fora dele). `gitleaks.yml` fica fora da
 # matriz de propósito: varre conteúdo do histórico, não comportamento de plataforma.
+#
+# Matriz enxuta (herdada da PR Caio-MOR/Cakopit#14): macOS custa 10x o minuto do
+# ubuntu, sem rodar em todo push. Ele sai deste workflow e vira `tests-macos.yml`,
+# semanal — continua sendo verificado, só que não a cada commit. Em PR a matriz de
+# suíte segue ubuntu+windows (o par que pega os dois bugs citados acima); em push
+# direto na main (sem PR — ex.: merge de squash) só ubuntu roda, porque windows já
+# rodou na PR que originou o commit. `lint-routers` é stdlib pura e independe de SO:
+# uma plataforma basta.
 
 on:
   pull_request:
+    paths-ignore:
+      - '.claude-memory/**'
+      - 'audits/**'
+      - '**/logs/**'
   push:
     branches: [main]
+    paths-ignore:
+      - '.claude-memory/**'
+      - 'audits/**'
+      - '**/logs/**'
 
 permissions:
   contents: read
 
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   testes:
     name: suite-pytest
+    timeout-minutes: 15
     strategy:
-      # fail-fast: false para ver os três veredictos; SO que passa também é dado.
+      # fail-fast: false para ver os veredictos de todos os SOs da rodada.
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["ubuntu-latest","windows-latest"]' || '["ubuntu-latest"]') }}
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -34,6 +55,7 @@ jobs:
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version-file: .python-version
+          cache: pip
 
       - name: Dependências (só requirements.txt)
         run: pip install -r requirements.txt
@@ -48,20 +70,13 @@ jobs:
 
   lint-routers:
     name: lint-de-routers
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      # O lint é stdlib pura e segue sem pip. O setup-python entra só para dar
-      # um nome de executável que exista nos três runners: `python3` não é
-      # confiável no Windows (lá o binário é `python`, e o alias do Store
-      # sequestra `python3`), e `python` sem setup não existe no runner do
-      # macOS. Com o setup, `python` vale para os três.
+      # O lint é stdlib pura: não depende de SO, roda numa plataforma só.
       - name: Python (versão do .python-version)
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:

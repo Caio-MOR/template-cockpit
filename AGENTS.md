@@ -26,7 +26,7 @@ Categorias com conteúdo variável têm router local (`CLAUDE.md` dentro da past
 | Teste automatizado (gates, tools, sensores) | `tests/` — um arquivo por gate ou tool; configuração em `pytest.ini` + `conftest.py` na raiz |
 | Spec de feature em andamento e log de decisões | `.specs/` — `STATE.md` (decisões AD-nnn + handoff), `LESSONS.md`, uma pasta por feature quando houver |
 | Rules, sub-agentes, commands, hooks | `.claude/` — `rules/` (carregadas na abertura da sessão), `agents/`, `commands/`, `settings.json` |
-| CI (veredito da suíte + lint em 3 SOs; varredura de segredos) | `.github/workflows/tests.yml` e `.github/workflows/gitleaks.yml` |
+| CI (veredito da suíte + lint; matriz enxuta + macOS semanal; varredura de segredos) | `.github/workflows/tests.yml`, `.github/workflows/tests-macos.yml` e `.github/workflows/gitleaks.yml` |
 | Configuração de gate e de ambiente | `conftest.py` (réguas da suíte), `pytest.ini`, `requirements.txt`, `.python-version` (3.12), `.gitignore` (allowlist nega-tudo), `.gitattributes` |
 | Instruções para agentes e porta de entrada humana | `AGENTS.md` (fonte única), `CLAUDE.md` (importa este + adendos), `README.md` (humanos) |
 
@@ -48,7 +48,7 @@ Os 4 modos de falha que mais derrubam acerto. Siga à risca:
 - `python tools/gate_veredito.py` — veredito da suíte: guarda de conteúdo (AST do `conftest.py` e dos gates) + canário + suíte, em subprocessos de ambiente limpo. Esperado: `veredito: VERDE`. `pytest -q` direto não substitui: quem julga a suíte não pode ser o próprio pytest.
 - `python tools/lint_routers.py` — referências de todo `CLAUDE.md` (e `AGENTS.md`/`README.md`) contra o índice git, mais cobertura reversa de `workflows/` e `tools/`. Esperado: `0 erro(s)`.
 
-Ambos rodam no CI em todo push na main e PR (`.github/workflows/tests.yml`, matriz ubuntu/windows/macos). Rode local antes de mexer em router ou entregar código. Sem `.venv`: receita por sistema operacional no `README.md`.
+Ambos rodam no CI em todo push na main e PR (`.github/workflows/tests.yml`, matriz enxuta: ubuntu sempre, +windows só em PR; macOS semanal em `tests-macos.yml`). Rode local antes de mexer em router ou entregar código. Sem `.venv`: receita por sistema operacional no `README.md`.
 
 ## Regras globais
 
