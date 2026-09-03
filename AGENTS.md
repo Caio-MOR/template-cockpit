@@ -26,7 +26,7 @@ Categorias com conteúdo variável têm router local (`CLAUDE.md` dentro da past
 | Referência durável, handoff, dossiê, spec de design | `docs/` (router lá) |
 | Teste automatizado (gates, tools, sensores) | `tests/` — um arquivo por gate ou tool; configuração em `pytest.ini` + `conftest.py` na raiz |
 | Spec de feature em andamento e log de decisões | `.specs/` — `STATE.md` (decisões AD-nnn + handoff), `LESSONS.md`, uma pasta por feature quando houver |
-| Rules, sub-agentes, commands, skills, hooks | `.claude/` — `rules/` (carregadas na abertura da sessão), `agents/`, `commands/`, `skills/` (`_exemplo-skill/` é o modelo a copiar), `settings.json` |
+| Rules, sub-agentes, commands, skills, hooks | `.claude/` — `rules/` (carregadas na abertura da sessão), `agents/`, `commands/`, `skills/` (`_exemplo-skill/` é o modelo a copiar), `settings.json` (também registra o marketplace de plugins de processo, caio-mor) |
 | CI (veredito da suíte + lint; matriz enxuta + macOS semanal; varredura de segredos) | `.github/workflows/tests.yml`, `.github/workflows/tests-macos.yml` e `.github/workflows/gitleaks.yml` |
 | Configuração de gate e de ambiente | `conftest.py` (réguas da suíte), `pytest.ini`, `requirements.txt`, `.python-version` (3.12), `.gitignore` (allowlist nega-tudo), `.gitattributes` |
 | Instruções para agentes e porta de entrada humana | `AGENTS.md` (fonte única), `CLAUDE.md` (importa este + adendos), `README.md` (humanos) |
@@ -59,6 +59,7 @@ Ambos rodam no CI em todo push na main e PR (`.github/workflows/tests.yml`, matr
 - **Loop engineering:** todo laço (retry, polling, rotina LLM) declara teto de iterações, detector de estagnação e escreve marker de evidência só após sucesso — `.claude/rules/loop-engineering.md`.
 - Arquivos locais servem para processamento; entregáveis vão para a nuvem (e-mail, banco, planilha compartilhada). `.tmp/` é descartável.
 - **Conduta no repositório:** versionamento em branch + PR, tom sem jargão, memória e segredos — `.claude/rules/conduta-colaborador.md`.
+- **Skills de processo** vêm do marketplace `caio-mor` (Caio-MOR/plugins): construir algo novo usa a skill de spec; bug de causa desconhecida usa a de depuração; auditoria de organização usa a de auditoria. Skill de domínio deste repo tem precedência sobre skill de processo.
 
 ## Resumo
 
