@@ -24,6 +24,7 @@
 !/tests/
 !/workflows/
 !/.specs/
+!/apps/
 
 # Logs de rotina ficam na máquina; só o .gitkeep entra para a pasta existir no clone
 workflows/*/logs/*

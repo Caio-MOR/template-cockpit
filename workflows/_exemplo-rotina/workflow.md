@@ -56,3 +56,20 @@ O laço em `C` é retry local com teto (não muda o formato dominante: a rotina 
 ## Agendamento
 
 Registrar no agendador da máquina apontando para `scripts/rotina_exemplo.vbs` (sem janela) — o `.vbs` chama o `.bat`, que ativa o venv relativo e chama o `.py`, propagando o exit code em toda a cadeia.
+
+Quem registra o agendamento é o próprio agente, na sessão em que a rotina nasce ou muda. Nos comandos abaixo, `<RAIZ>` é a raiz do repositório **na máquina onde a rotina vai rodar**: o agente descobre na hora (`pwd` no shell, `Get-Location` no PowerShell) e substitui antes de executar — o valor não fica versionado, porque muda de máquina para máquina (o auditor reprova caminho absoluto em arquivo do repo).
+
+**Windows** (Agendador de Tarefas, via `schtasks`; ajuste o horário ao caso real):
+
+```
+schtasks /create /tn "rotina-exemplo" /tr "wscript.exe <RAIZ>\workflows\_exemplo-rotina\scripts\rotina_exemplo.vbs" /sc daily /st 07:00
+otina_exemplo.vbs" /sc daily /st 07:00
+```
+
+**Linux/Mac** (`cron`; o `cd` é obrigatório porque o cron não executa a partir do repo, e o venv relativo depende disso):
+
+```
+0 7 * * * cd <RAIZ> && .venv/bin/python workflows/_exemplo-rotina/scripts/rotina_exemplo.py
+```
+
+Depois de registrar, o agente confere com `schtasks /query /tn "rotina-exemplo"` (Windows) ou `crontab -l` (Linux/Mac) e cola a saída real na entrega — agendamento se prova pelo registro, não pela afirmação de que foi feito.
