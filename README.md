@@ -61,3 +61,7 @@ gh repo create <novo-repo> --template {{DONO}}/template-cockpit --private
 ```
 
 Depois, no clone novo: substituir todos os placeholders `{{...}}` (`{{NOME_DO_REPO}}`, `{{DONO}}`, `{{DESCRICAO}}`, `{{IDIOMA}}`), criar o `.venv` (seção acima), rodar os dois gates e o auditor. O primeiro commit do repo instanciado deve sair com o veredito VERDE e o lint em `0 erro(s)`.
+
+---
+
+Template criado por **Caio Kohn** (Metalúrgica Mor) como padrão de cockpit WAT da organização.
