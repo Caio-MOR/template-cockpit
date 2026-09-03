@@ -27,5 +27,18 @@
   },
   "env": {
     "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  },
+  "extraKnownMarketplaces": {
+    "caio-mor": {
+      "source": {
+        "source": "github",
+        "repo": "Caio-MOR/plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "tlc-spec-driven@caio-mor": true,
+    "systematic-debugging@caio-mor": true,
+    "os-audit@caio-mor": true
   }
 }

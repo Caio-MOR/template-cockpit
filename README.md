@@ -65,7 +65,14 @@ Depois, no clone novo, é o **agente** quem executa este checklist ao abrir a pr
 1. Se houver `{{...}}` em qualquer arquivo do repo, perguntar ao usuário, em linguagem simples (sem jargão técnico), o nome do projeto, uma descrição curta e o idioma padrão — e substituir todas as ocorrências.
 2. Criar o `.venv` conforme a seção "Como rodar" acima.
 3. Rodar os dois gates e o auditor **sem** `--template` (a instância real não tem mais placeholder para desculpar).
-4. Primeiro commit em branch + PR, colando na entrega o veredito `VERDE`, o `0 erro(s)` do lint e o placar do auditor.
+4. Instalar as skills de processo do marketplace `caio-mor` (já registrado em `.claude/settings.json`, mas registro não instala sozinho — cada plugin precisa de comando explícito):
+   ```
+   claude plugin install tlc-spec-driven@caio-mor
+   claude plugin install systematic-debugging@caio-mor
+   claude plugin install os-audit@caio-mor
+   ```
+   Conferir com `claude plugin list` e colar a saída na entrega.
+5. Primeiro commit em branch + PR, colando na entrega o veredito `VERDE`, o `0 erro(s)` do lint e o placar do auditor.
 
 ---
 
