@@ -137,8 +137,25 @@ o que o repo guarda. Medido: bruto `1538888107b5…` (Windows), normalizado
 
 **Done when**:
 
-- [ ] `pip install -r requirements.txt` numa venv limpa faz o runner importar
-- [ ] `python tools/gate_veredito.py` verde
+- [x] `pip install -r requirements.txt` numa venv limpa faz o runner importar
+- [x] `python tools/gate_veredito.py` verde
+
+**SPEC_DEVIATION:** o `Where` nomeia só `requirements.txt`, mas o campo `Tests` pede
+gate declarativo sobre o arquivo. Implementá-lo tocou `tests/test_ci_pinado.py` (o gate
+novo, o sintético que prova que ele morde, e uma frase da docstring que a mudança
+tornou falsa) e `conftest.py` (`COLETA_MEDIDA` 111 -> 113, `PISO_COLETA` 55 -> 56,
+mínimo de `test_ci_pinado.py` 6 -> 8). Motivo: sem o gate, o critério da venv limpa
+fica provado só por execução manual e volta a apodrecer.
+
+**Prova de execução:** venv limpa com o `requirements.txt` deste repo importa o runner
+(`IMPORT OK 1.0.0`); venv com pytest e sem `pyyaml` devolve
+`ModuleNotFoundError: No module named 'yaml'`. O controle negativo é o que prova que a
+declaração é necessária, e não coincidência da máquina do autor.
+
+**Achado fora de escopo:** `pytest -q` puro tem 18 falhas em `tests/test_hooks.py` no
+Windows, anteriores a esta branch (reproduzidas em worktree limpo de `origin/main`). O
+veredito passa porque `tools/gate_veredito.py:73` injeta `PYTHONIOENCODING=utf-8`, e os
+hooks emitem pt-BR em cp1252. Registrado para tarefa própria, não consertado aqui.
 
 **Tests**: gate declarativo sobre o arquivo (matriz: Configuração de CI e de lock)
 **Gate**: Full
