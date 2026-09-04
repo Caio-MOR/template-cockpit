@@ -81,7 +81,7 @@ As regras acima (segredo só em `.env`, nunca commit direto na `main`) deixaram 
 - **`guarda_bash.py`** (todo comando `Bash`): bloqueia `git commit` direto em `main`/`master`, `git push --force`/`-f`/`--force-with-lease`, qualquer `--no-verify` e `git push` com destino explícito `main`/`master`.
 - **`guarda_segredo.py`** (todo `Edit`/`Write`/`MultiEdit`): bloqueia escrita em `.env` e em qualquer variante `.env.algo` (exceto `.env.example`) e conteúdo que casa com padrão de chave/segredo conhecido (AWS, GitHub, chave privada, JWT, Supabase, `x-api-key`).
 
-Os dois falham **abertos** por decisão — bug no hook não pode travar quem não sabe depurar hook — e a cascata de interpretador (`.claude/hooks/run_hook.sh`) escolhe `.venv` do repo antes de cair para `python3`/`python` do sistema. A prova de que os hooks mordem (casos que bloqueiam e casos que passam) está em `tests/test_hooks.py`, rodado no CI em Linux, macOS e Windows.
+Os dois falham **abertos** por decisão — bug no hook não pode travar quem não sabe depurar hook — e a cascata de interpretador (`.claude/hooks/run_hook.sh`) escolhe `.venv` do repo antes de cair para `python3`/`python` do sistema. A prova de que os hooks mordem (casos que bloqueiam e casos que passam) está em `tests/test_hooks.py`, rodado no CI em Linux e Windows a cada PR (macOS semanal).
 
 ---
 
