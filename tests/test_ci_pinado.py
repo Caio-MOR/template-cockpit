@@ -19,8 +19,8 @@ WORKFLOWS = sorted((RAIZ / ".github" / "workflows").glob("*.y*ml"))
 # (action, tag) -> SHA revisado. Par fora da tabela reprova; par na tabela que nenhum
 # workflow usa também reprova (tabela limpa).
 PINS = {
-    ("actions/checkout", "v4.4.0"): "11d5960a326750d5838078e36cf38b85af677262",
-    ("actions/setup-python", "v5.6.0"): "a26af69be951a213d495a4c3e4e4022e16d87065",
+    ("actions/checkout", "v7.0.1"): "3d3c42e5aac5ba805825da76410c181273ba90b1",
+    ("actions/setup-python", "v7.0.0"): "5fda3b95a4ea91299a34e894583c3862153e4b97",
 }
 
 USES = re.compile(
@@ -126,7 +126,7 @@ def test_sintetico_uses_por_tag_ou_sha_de_outro_dono_reprova():
     assert _divergencias("x.yml", por_tag, PINS) == [
         "x.yml:2 action não pinada por SHA: - uses: actions/checkout@v4"
     ]
-    sha_falso = "  - uses: actions/checkout@" + "0" * 40 + " # v4.4.0\n"
+    sha_falso = "  - uses: actions/checkout@" + "0" * 40 + " # v7.0.1\n"
     [problema] = _divergencias("x.yml", sha_falso, PINS)
     assert "pinada em " + "0" * 40 in problema
     fora_da_tabela = "  - uses: alguem/acao@" + "a" * 40 + " # v1.0.0\n"
