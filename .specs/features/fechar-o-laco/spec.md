@@ -152,7 +152,7 @@ Há ainda dois furos menores de mesma natureza: `requirements.txt` promete ambie
 | --- | --- | --- | --- |
 | SYNC-01 | P3: Uma cópia só do runner, e divergência nova fica impossível em silêncio | Tasks | Done (T2, T3) |
 | SYNC-02 | P3: Uma cópia só do runner, e divergência nova fica impossível em silêncio | Tasks | Done (T1) |
-| SYNC-03 | P3: Uma cópia só do runner, e divergência nova fica impossível em silêncio | Tasks | Pending |
+| SYNC-03 | P3: Uma cópia só do runner, e divergência nova fica impossível em silêncio | Tasks | Done (T4) |
 | GATE-01 | P2: O repo `plugins` passa a ser julgado pelo mesmo padrão que cobra | Tasks | Pending |
 | GATE-02 | P2: O repo `plugins` passa a ser julgado pelo mesmo padrão que cobra | Tasks | Pending |
 | GATE-03 | P2: O repo `plugins` passa a ser julgado pelo mesmo padrão que cobra | Tasks | Pending |

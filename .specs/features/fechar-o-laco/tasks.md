@@ -171,10 +171,22 @@ hooks emitem pt-BR em cp1252. Registrado para tarefa própria, não consertado a
 
 **Done when**:
 
-- [ ] O teste reprova quando o arquivo é alterado em um byte
-- [ ] Mensagem de falha diz: atualize a cópia, recalcule o sha, atualize `COMMIT_UPSTREAM`
-- [ ] Cabeçalho declara a natureza de atestação
-- [ ] Registrado em `GATES_OBRIGATORIOS` e `python tools/gate_veredito.py` verde
+- [x] O teste reprova quando o arquivo é alterado em um byte
+- [x] Mensagem de falha diz: atualize a cópia, recalcule o sha, atualize `COMMIT_UPSTREAM`
+- [x] Cabeçalho declara a natureza de atestação
+- [x] Registrado em `GATES_OBRIGATORIOS` e `python tools/gate_veredito.py` verde
+
+**Sensor de mutação, no arquivo real:** um espaço apendado em `tools/eval_runner.py`
+leva o gate a `3 failed, 1 passed`, com a mensagem dos três passos; `git checkout` do
+arquivo devolve `4 passed` e árvore limpa. Provar só em `tmp_path` deixaria de fora a
+possibilidade de `SHA_CANONICO` estar pinado no hash de outra coisa.
+
+**Fim de linha:** o hash é do conteúdo normalizado em LF, e `git cat-file blob
+HEAD:tools/eval_runner.py | sha256sum` devolve exatamente `SHA_CANONICO` — ou seja, a
+constante é o hash do que o repo guarda, igual em qualquer SO.
+
+**Toca também `conftest.py`:** `COLETA_MEDIDA` 113 -> 117, `PISO_COLETA` 56 -> 58 e a
+entrada nova em `GATES_OBRIGATORIOS`, que a própria tarefa exige.
 
 **Tests**: unit com fixture sintética por condição de reprovação (matriz: Gate novo)
 **Gate**: Full
