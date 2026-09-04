@@ -53,6 +53,30 @@ def test_parse_caso_le_frontmatter_e_graders(tmp_path):
     assert caso["graders"][0]["type"] == "tool_used"
 
 
+def test_parse_caso_colapsa_quebra_de_linha_do_corpo(tmp_path):
+    """Gotcha medido 2026-09-04 (Windows): um corpo de prompt quebrado em duas
+    linhas (\\n ou \\r\\n) vira, sem esse colapso, um argumento com newline no
+    meio — o wrapper .cmd do `claude` no Windows recebe isso como se a linha de
+    comando tivesse terminado ali e sai com returncode 0 sem rodar nada (nem
+    transcrição, nem erro). O `prompt` parseado precisa ser sempre uma linha só."""
+    case_dir = tmp_path / "caso-quebrado"
+    (case_dir / "graders").mkdir(parents=True)
+    (case_dir / "prompt.md").write_text(
+        "---\nname: caso-quebrado\ntags: [positivo]\nruns: 3\nmax_turns: 3\n"
+        "timeout_seconds: 180\n---\n\nPrimeira parte da frase\r\nsegunda parte da frase.\n",
+        encoding="utf-8",
+    )
+    (case_dir / "graders" / "disparo.md").write_text(
+        "---\ntype: tool_used\ntool: Skill\n"
+        "input_match: '\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?os-audit\"'\nmin: 1\n---\n\njustificativa\n",
+        encoding="utf-8",
+    )
+    caso = eval_runner.parse_caso(case_dir)
+    assert "\n" not in caso["prompt"]
+    assert "\r" not in caso["prompt"]
+    assert caso["prompt"] == "Primeira parte da frase segunda parte da frase."
+
+
 def test_parse_caso_sem_frontmatter_reprova(tmp_path):
     case_dir = tmp_path / "caso-y"
     (case_dir / "graders").mkdir(parents=True)

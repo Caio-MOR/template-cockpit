@@ -150,7 +150,14 @@ def parse_frontmatter(texto: str, origem: str) -> tuple[dict, str]:
     if not m:
         raise ErroCasoMalFormado(f"{origem}: sem frontmatter (precisa começar com `---`)")
     campos = yaml_lite_load(m.group(1))
-    corpo = texto[m.end():].strip()
+    # Gotcha medido (2026-09-04, Windows): um corpo de prompt com quebra de linha
+    # (parágrafo dobrado por legibilidade no .md) vira uma única entrada de
+    # subprocess.run([...]), mas o CLI do claude é um wrapper .cmd — no Windows,
+    # `\r\n`/`\n` no MEIO de um argumento corta a linha de comando do batch e o
+    # processo sai com returncode 0 sem rodar nada (nem transcrição, nem erro).
+    # Colapsar quebras/espaços internos em um único espaço deixa o prompt sempre
+    # numa linha só, sem mudar o texto que o modelo recebe.
+    corpo = re.sub(r"\s+", " ", texto[m.end():]).strip()
     return campos, corpo
 
 
@@ -208,11 +215,9 @@ def montar_comando(caminho_claude: str, prompt: str, max_turns: int, plugin_dir:
     return cmd
 
 
-def executar_run(caminho_claude: str, prompt: str, max_turns: int, timeout_s: int,
-                  cwd: Path, plugin_dir: Path | None) -> list[dict]:
-    cmd = montar_comando(caminho_claude, prompt, max_turns, plugin_dir)
+def _rodar_subprocesso(cmd: list[str], cwd: Path, timeout_s: int) -> subprocess.CompletedProcess:
     try:
-        r = subprocess.run(
+        return subprocess.run(
             cmd, cwd=str(cwd), capture_output=True, timeout=timeout_s,
             encoding="utf-8", errors="replace", check=False,
         )
@@ -220,6 +225,21 @@ def executar_run(caminho_claude: str, prompt: str, max_turns: int, timeout_s: in
         raise ErroInfra(f"timeout ({timeout_s}s) rodando `claude -p`") from e
     except OSError as e:
         raise ErroInfra(f"não foi possível executar `claude`: {e}") from e
+
+
+def executar_run(caminho_claude: str, prompt: str, max_turns: int, timeout_s: int,
+                  cwd: Path, plugin_dir: Path | None) -> list[dict]:
+    cmd = montar_comando(caminho_claude, prompt, max_turns, plugin_dir)
+    r = _rodar_subprocesso(cmd, cwd, timeout_s)
+    # Gotcha medido (2026-09-04, Windows): rodar vários `claude -p` em sequência
+    # rápida às vezes produz um processo que sai com returncode 0 e stdout/stderr
+    # totalmente vazios — nem transcrição, nem erro de auth, nem nada (não é o
+    # caminho de "not logged in", que sempre vem com texto). Isso não é uma falha
+    # de grader nem de auth: é um no-op espúrio do processo. Uma única re-tentativa
+    # (não conta como novo run do frontmatter, é recuperação de infra dentro do
+    # mesmo run) resolve; se repetir, cai no ErroInfra normal abaixo.
+    if r.returncode == 0 and not (r.stdout or "").strip() and not (r.stderr or "").strip():
+        r = _rodar_subprocesso(cmd, cwd, timeout_s)
 
     linhas = []
     for linha in (r.stdout or "").splitlines():
