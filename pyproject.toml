@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# Default do ruff (E4, E7, E9, F) + I (import sorting) — explícito para não
+# depender do que a versão instalada considera "default" por baixo do capô.
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# E741 (nome de variável ambíguo `l`) em arquivos que a tarefa de introduzir o
+# ruff está proibida de tocar (gates congelados) — ver AGENTS.md/lista de
+# "não tocar" do consertos-mecanicos. Ignorado aqui, na configuração, sem
+# mexer na lógica desses arquivos.
+"tools/lint_routers.py" = ["E741"]
+"tools/padrao_ouro_audit.py" = ["E741"]
+"tests/test_ci_pinado.py" = ["E741"]

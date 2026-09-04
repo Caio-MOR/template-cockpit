@@ -16,6 +16,7 @@
 !/conftest.py
 !/.python-version
 !/.env.example
+!/pyproject.toml
 
 # Pastas versionadas
 !/.github/
