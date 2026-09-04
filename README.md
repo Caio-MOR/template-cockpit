@@ -74,6 +74,15 @@ Depois, no clone novo, é o **agente** quem executa este checklist ao abrir a pr
    Conferir com `claude plugin list` e colar a saída na entrega.
 5. Primeiro commit em branch + PR, colando na entrega o veredito `VERDE`, o `0 erro(s)` do lint e o placar do auditor.
 
+## O que o Claude Code bloqueia sozinho neste repo
+
+As regras acima (segredo só em `.env`, nunca commit direto na `main`) deixaram de ser só texto: `.claude/settings.json` tem `permissions.deny`/`allow` e dois hooks `PreToolUse` em `.claude/hooks/` que mordem de verdade, em qualquer SO com Git Bash.
+
+- **`guarda_bash.py`** (todo comando `Bash`): bloqueia `git commit` direto em `main`/`master`, `git push --force`/`-f`/`--force-with-lease`, qualquer `--no-verify` e `git push` com destino explícito `main`/`master`.
+- **`guarda_segredo.py`** (todo `Edit`/`Write`/`MultiEdit`): bloqueia escrita em `.env` e em qualquer variante `.env.algo` (exceto `.env.example`) e conteúdo que casa com padrão de chave/segredo conhecido (AWS, GitHub, chave privada, JWT, Supabase, `x-api-key`).
+
+Os dois falham **abertos** por decisão — bug no hook não pode travar quem não sabe depurar hook — e a cascata de interpretador (`.claude/hooks/run_hook.sh`) escolhe `.venv` do repo antes de cair para `python3`/`python` do sistema. A prova de que os hooks mordem (casos que bloqueiam e casos que passam) está em `tests/test_hooks.py`, rodado no CI em Linux e Windows a cada PR (macOS semanal).
+
 ---
 
 Criado por Caio Kohn
