@@ -89,3 +89,11 @@ jobs:
       # instanciado, troque por `python tools/padrao_ouro_audit.py .` (sem --template).
       - name: Auditor do padrão ouro
         run: python tools/padrao_ouro_audit.py --tipo cockpit --template .
+
+      # Pin exato (não a action de terceiro `ruff-action`): versão previsível,
+      # sem depender de uma tag móvel de outro repo.
+      - name: Instalar ruff
+        run: pip install ruff==0.16.6
+
+      - name: Lint de estilo (ruff)
+        run: ruff check .
