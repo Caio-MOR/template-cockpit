@@ -5,15 +5,20 @@ outro dono com o comentário de versão mantido. Por isso a tabela PINS: (action
 SHA. Atualizar a tabela no mesmo PR que atualiza o workflow é justamente a revisão que
 se quer forçar. O glob é `*.y*ml` porque o GitHub aceita `.yml` e `.yaml`.
 
-O parse do `permissions` é por linha porque `pyyaml` não está no `requirements.txt`:
-o gate não pode depender de dependência que o CI não instala.
+O parse do `permissions` é por linha, e desde T3 isso é escolha e não restrição:
+`pyyaml` entrou no `requirements.txt` para o runner de eval. Trocar este parse por
+`yaml.safe_load` é melhoria possível, deixada de fora do escopo de T3.
 """
+import ast
 import json
 import re
+import sys
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 SETTINGS = RAIZ / ".claude" / "settings.json"
+REQUIREMENTS = RAIZ / "requirements.txt"
+TOOLS = RAIZ / "tools"
 WORKFLOWS = sorted((RAIZ / ".github" / "workflows").glob("*.y*ml"))
 
 # (action, tag) -> SHA revisado. Par fora da tabela reprova; par na tabela que nenhum
@@ -133,3 +138,70 @@ def test_sintetico_uses_por_tag_ou_sha_de_outro_dono_reprova():
     assert "par não declarado em PINS" in _divergencias("x.yml", fora_da_tabela, PINS)[0]
     assert _permissions_contents("name: x\njobs:\n  a: {}\n") is None
     assert _permissions_contents("permissions:\n  contents: read\njobs: {}\n") == "read"
+
+
+# ------------------------------------------------- dependência externa declarada
+
+
+# Import de terceiro -> nome da distribuição no `requirements.txt`. Módulo importado
+# fora deste mapa reprova: acrescentar a entrada é a revisão que se quer forçar.
+MODULO_PARA_DISTRIBUICAO = {"yaml": "pyyaml"}
+RE_NOME_DE_PACOTE = re.compile(r"[A-Za-z0-9._-]+")
+
+
+def _imports_de_terceiro(arquivo: Path, locais: set[str]) -> set[str]:
+    raizes: set[str] = set()
+    for no in ast.walk(ast.parse(arquivo.read_text(encoding="utf-8"))):
+        if isinstance(no, ast.Import):
+            raizes.update(a.name.split(".")[0] for a in no.names)
+        elif isinstance(no, ast.ImportFrom) and no.level == 0 and no.module:
+            raizes.add(no.module.split(".")[0])
+    return {r for r in raizes if r not in sys.stdlib_module_names and r not in locais}
+
+
+def _distribuicoes_declaradas() -> set[str]:
+    nomes: set[str] = set()
+    for linha in REQUIREMENTS.read_text(encoding="utf-8").splitlines():
+        sem_comentario = linha.split("#")[0].strip()
+        casado = RE_NOME_DE_PACOTE.match(sem_comentario)
+        if casado:
+            nomes.add(casado.group(0).lower())
+    return nomes
+
+
+def test_toda_dependencia_externa_de_tools_declarada_no_requirements():
+    """Todo import de terceiro em `tools/` aparece no `requirements.txt`.
+
+    O furo que fecha: o runner de eval passou a importar `yaml` numa cópia vinda
+    de outro repo, onde a dependência era declarada — aqui não era. Venv limpa
+    quebraria no import e a suíte local passaria, porque a máquina do autor já
+    tinha o pacote instalado por outro caminho.
+    """
+    declaradas = _distribuicoes_declaradas()
+    locais = {f.stem for f in TOOLS.glob("*.py")}
+    faltando = []
+    for arquivo in sorted(TOOLS.glob("*.py")):
+        for modulo in sorted(_imports_de_terceiro(arquivo, locais)):
+            distribuicao = MODULO_PARA_DISTRIBUICAO.get(modulo)
+            if distribuicao is None:
+                faltando.append(
+                    f"{arquivo.name}: import `{modulo}` sem entrada em "
+                    "MODULO_PARA_DISTRIBUICAO deste teste"
+                )
+            elif distribuicao.lower() not in declaradas:
+                faltando.append(
+                    f"{arquivo.name}: import `{modulo}` exige `{distribuicao}` "
+                    "declarado no requirements.txt"
+                )
+    assert faltando == [], "; ".join(faltando)
+
+
+def test_sintetico_import_nao_declarado_reprova(tmp_path):
+    """O gate acima morde: arquivo sintético que importa pacote fora do requirements."""
+    falso = tmp_path / "usa_requests.py"
+    falso.write_text("""import requests
+import json
+""", encoding="utf-8")
+    assert _imports_de_terceiro(falso, set()) == {"requests"}
+    assert "requests" not in _distribuicoes_declaradas()
+    assert "pyyaml" in _distribuicoes_declaradas()

@@ -102,6 +102,33 @@ def test_parse_caso_com_runs_nao_inteiro_reprova(tmp_path):
         eval_runner.parse_caso(case_dir)
 
 
+def test_parse_caso_com_frontmatter_yaml_invalido_reprova(tmp_path):
+    """YAML sintaticamente inválido reprova, em vez de virar string em silêncio.
+
+    É o motivo de o runner ter passado a usar `yaml.safe_load`. O parser artesanal
+    que existia aqui lia `tags: [positivo` (colchete não fechado) como a string
+    literal "[positivo" e seguia: caso mal formado passando por válido, no caminho
+    de verificação.
+
+    O gate de sincronia (`test_runner_sincronizado.py`) garante que o arquivo é
+    byte-idêntico à canônica, não que a suíte DAQUI prove o comportamento. É esta
+    suíte que julga as PRs deste repo, então o caso vive nos dois lados.
+    """
+    case_dir = tmp_path / "caso-w"
+    (case_dir / "graders").mkdir(parents=True)
+    (case_dir / "prompt.md").write_text(
+        "---\nname: caso-w\ntags: [positivo\nruns: 3\nmax_turns: 3\n"
+        "timeout_seconds: 180\n---\n\nprompt\n",
+        encoding="utf-8",
+    )
+    (case_dir / "graders" / "disparo.md").write_text(
+        "---\ntype: tool_used\ntool: Skill\ninput_match: 'x'\nmin: 1\n---\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(eval_runner.ErroCasoMalFormado, match="YAML inválido"):
+        eval_runner.parse_caso(case_dir)
+
+
 def test_parse_caso_com_regex_incompilavel_reprova(tmp_path):
     case_dir = tmp_path / "caso-w"
     (case_dir / "graders").mkdir(parents=True)
