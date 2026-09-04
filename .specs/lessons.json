@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 3,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "surviving_mutant::convergir duas copias de um arquivo com sha256 pinado protege o byte nao a semantica escreva o teste do comportamento que motivou a convergencia senao o mutante que reintroduz o codigo antigo sobrevive a suite inteira",
+      "text": "Convergir duas cópias de um arquivo com sha256 pinado protege o byte, não a semântica: escreva o teste do comportamento que motivou a convergência, senão o mutante que reintroduz o código antigo sobrevive à suíte inteira.",
+      "signal": "surviving_mutant",
+      "scope": "verificacao/copia-espelhada",
+      "status": "candidate",
+      "features": [
+        "fechar-o-laco"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "M5 (iteração 1): plugins/tools/eval_runner.py:131 (verificacao/copia-espelhada)"
+      ],
+      "created": "2026-09-04T17:12:22Z",
+      "last_seen": "2026-09-04T17:12:22Z"
+    },
+    {
+      "id": "L-002",
+      "key": "ac_gap::requisito de tipo o cabecalho declara x precisa de assercao sobre a docstring declaracao que so existe como prosa e apagavel com a suite verde",
+      "text": "Requisito de tipo 'o cabeçalho declara X' precisa de asserção sobre a docstring: declaração que só existe como prosa é apagável com a suíte verde.",
+      "signal": "ac_gap",
+      "scope": "verificacao/atestacao",
+      "status": "candidate",
+      "features": [
+        "fechar-o-laco"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "tests/test_runner_sincronizado.py:3 (verificacao/atestacao)"
+      ],
+      "created": "2026-09-04T17:12:22Z",
+      "last_seen": "2026-09-04T17:12:22Z"
+    }
+  ]
+}

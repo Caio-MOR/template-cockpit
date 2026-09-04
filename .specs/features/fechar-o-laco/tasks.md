@@ -715,6 +715,17 @@ Cabeçalho declara em uma frase: a **medição** é local e atestada, a **verifi
 
 ### T32: Decidir a norma da própria spec
 
+**Dados novos para esta decisão, medidos na Fase 1:**
+
+- `validate_state.py` só reconhece o veredito por âncora em inglês: relatório de
+  validação escrito em pt-BR é lido como template não preenchido.
+- `lessons.py` renderiza `.specs/LESSONS.md` com cabeçalho em inglês, sobrescrevendo o
+  texto pt-BR que o repo tinha escrito à mão. O arquivo já avisava que isso aconteceria,
+  então é ciclo de vida previsto, não dano — mas é o custo concreto de adotar o formato
+  mecânico do TLC junto da regra da casa de conteúdo em pt-BR.
+- `validate_spec.py` e `validate_tasks.py` passam com `--strict` sobre cabeçalhos em
+  inglês e corpo em pt-BR, que foi o arranjo escolhido nesta rodada e funcionou.
+
 **What**: Resolver a contradição de que os três validadores do `tlc-spec-driven` nunca rodam e o único `spec.md` real do `plugins` reprova neles.
 **Where**: `plugins/.specs/features/evals-comportamento/spec.md`
 **Depends on**: None
