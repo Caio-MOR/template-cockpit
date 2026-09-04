@@ -27,6 +27,7 @@
 !/workflows/
 !/.specs/
 !/apps/
+!/evals/
 
 # Logs de rotina ficam na máquina; só o .gitkeep entra para a pasta existir no clone
 workflows/*/logs/*
@@ -41,3 +42,4 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .tmp/
+evals/results/

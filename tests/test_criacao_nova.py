@@ -32,6 +32,7 @@ SKILLS = ".claude/skills/"
 AGENTES = ".claude/agents/"
 COMMANDS = ".claude/commands/"
 WORKFLOWS = "workflows/"
+EVALS = "evals/"
 TETO_SUBPROC = 120
 
 # Os cinco formatos da regra graph-engineering (híbrido aceita "(...)" logo depois).
@@ -58,6 +59,7 @@ RE_TETO = re.compile(r"\bteto\b", re.IGNORECASE)
 LEGADO_SEM_FORMATO_SKILLS = frozenset()
 LEGADO_SEM_FORMATO_WORKFLOWS = frozenset()
 LEGADO_NOME = frozenset()
+LEGADO_SEM_EVALS_SKILLS = frozenset()
 
 
 # ---------------------------------------------------------------------------
@@ -225,6 +227,58 @@ def _workflows_com_loop_sem_teto(indice, ler) -> list:
     return sem_teto
 
 
+def _casos_evals(indice, skill: str) -> list:
+    """Nomes das pastas de caso sob `evals/<skill>/`, a partir do índice git."""
+    prefixo = f"{EVALS}{skill}/"
+    n = prefixo.count("/")
+    return sorted({p.split("/")[n] for p in indice if p.startswith(prefixo) and p.count("/") > n})
+
+
+def _skills_sem_evals_completos(indice, ler, legado) -> dict:
+    """Skill nova (fora de LEGADO_SEM_EVALS_SKILLS) precisa de `evals/<skill>/` com pelo
+    menos 1 caso com `positivo` nas tags e 1 com `negativo` (R18: o gate de criação nova
+    ganha a porta de disparo — ver `docs/evals.md` e o marketplace `caio-mor`, que exige
+    3+3). Tags são lidas cru do frontmatter (parse por linha, sem pyyaml)."""
+    problemas = {}
+    for skill in _skills(indice):
+        if skill in legado:
+            continue
+        casos = _casos_evals(indice, skill)
+        if not casos:
+            problemas[skill] = ["sem pasta evals/<skill>/ com casos"]
+            continue
+        positivos = negativos = 0
+        for caso in casos:
+            rel = f"{EVALS}{skill}/{caso}/prompt.md"
+            if rel not in indice:
+                continue
+            chaves = _frontmatter(ler(rel)) or {}
+            tags = str(chaves.get("tags", ""))
+            positivos += "positivo" in tags
+            negativos += "negativo" in tags
+        faltas = []
+        if positivos < 1:
+            faltas.append("sem caso positivo")
+        if negativos < 1:
+            faltas.append("sem caso negativo")
+        if faltas:
+            problemas[skill] = faltas
+    return problemas
+
+
+def _evals_isencoes_mortas(indice, ler, legado) -> list:
+    completos = _skills_sem_evals_completos(indice, ler, frozenset())
+    return [
+        f"LEGADO_SEM_EVALS_SKILLS: {skill} já tem evals completos (1 positivo + 1 negativo)"
+        for skill in sorted(legado)
+        if f"{SKILLS}{skill}/SKILL.md" in indice and skill not in completos
+    ]
+
+
+def _evals_isencoes_fantasmas(indice, legado) -> list:
+    return [f"skill {s}" for s in sorted(legado) if f"{SKILLS}{s}/SKILL.md" not in indice]
+
+
 def _agentes_fora_do_contrato(indice, ler) -> dict:
     problemas = {}
     for rel in _arquivos(indice, AGENTES):
@@ -309,6 +363,14 @@ def test_refs_internas_da_skill_existem_no_indice():
     assert mortas == {}, f"refs internas mortas: {mortas}"
 
 
+def test_skill_nova_tem_evals_de_disparo_positivo_e_negativo():
+    """Skill fora de LEGADO_SEM_EVALS_SKILLS sem `evals/<skill>/` com >= 1 caso
+    positivo e >= 1 negativo reprova, nomeada (R18 — a mesma prova de disparo que o
+    marketplace `caio-mor` exige, versão modelo: 1+1 em vez de 3+3)."""
+    faltas = _skills_sem_evals_completos(_indice(), _ler, LEGADO_SEM_EVALS_SKILLS)
+    assert faltas == {}, f"skills sem evals de disparo completos (1 positivo + 1 negativo): {faltas}"
+
+
 # ---------------------------------------------------------------------------
 # Workflow novo nasce com grafo declarado — artefatos reais
 
@@ -376,6 +438,18 @@ def test_isencao_aponta_para_artefato_no_indice():
         _indice(), LEGADO_SEM_FORMATO_SKILLS, LEGADO_SEM_FORMATO_WORKFLOWS, LEGADO_NOME
     )
     assert fantasmas == [], f"isenções para artefatos que não existem: {fantasmas}"
+
+
+def test_isencao_de_evals_morta_reprova():
+    """Entrada de LEGADO_SEM_EVALS_SKILLS cuja skill já tem 1 positivo + 1 negativo reprova."""
+    mortas = _evals_isencoes_mortas(_indice(), _ler, LEGADO_SEM_EVALS_SKILLS)
+    assert mortas == [], f"isenções de evals mortas — tirar da lista: {mortas}"
+
+
+def test_isencao_de_evals_aponta_para_skill_no_indice():
+    """Nome em LEGADO_SEM_EVALS_SKILLS que não existe no índice reprova."""
+    fantasmas = _evals_isencoes_fantasmas(_indice(), LEGADO_SEM_EVALS_SKILLS)
+    assert fantasmas == [], f"isenções de evals para skills que não existem: {fantasmas}"
 
 
 # ---------------------------------------------------------------------------
@@ -472,6 +546,40 @@ def test_sintetico_ref_interna_morta_reprova_e_glob_e_ignorado():
     assert _skills_com_refs_mortas(indice, _leitor({f"{SKILLS}s/SKILL.md": texto})) == {
         "s": ["scripts/nao_existe.py", "assets/"]
     }
+
+
+def test_sintetico_skill_sem_evals_ou_sem_positivo_ou_negativo_reprova():
+    """Sem `evals/<skill>/`, só com positivo, ou completa (1+1) — mutação do contrato."""
+    indice = frozenset({
+        f"{SKILLS}a/SKILL.md",
+        f"{SKILLS}b/SKILL.md", f"{EVALS}b/so-positivo/prompt.md",
+        f"{SKILLS}c/SKILL.md", f"{EVALS}c/pos/prompt.md", f"{EVALS}c/neg/prompt.md",
+    })
+    ler = _leitor({
+        f"{EVALS}b/so-positivo/prompt.md": "---\nname: so-positivo\ntags: [positivo]\n---\n",
+        f"{EVALS}c/pos/prompt.md": "---\nname: pos\ntags: [positivo]\n---\n",
+        f"{EVALS}c/neg/prompt.md": "---\nname: neg\ntags: [negativo]\n---\n",
+    })
+    faltas = _skills_sem_evals_completos(indice, ler, frozenset())
+    assert faltas == {
+        "a": ["sem pasta evals/<skill>/ com casos"],
+        "b": ["sem caso negativo"],
+    }
+    assert _skills_sem_evals_completos(indice, ler, frozenset({"a", "b"})) == {}
+
+
+def test_sintetico_isencao_de_evals_morta_e_fantasma_reprovam():
+    indice = frozenset({
+        f"{SKILLS}viva/SKILL.md", f"{EVALS}viva/pos/prompt.md", f"{EVALS}viva/neg/prompt.md",
+    })
+    ler = _leitor({
+        f"{EVALS}viva/pos/prompt.md": "---\nname: pos\ntags: [positivo]\n---\n",
+        f"{EVALS}viva/neg/prompt.md": "---\nname: neg\ntags: [negativo]\n---\n",
+    })
+    assert _evals_isencoes_mortas(indice, ler, frozenset({"viva"})) == [
+        "LEGADO_SEM_EVALS_SKILLS: viva já tem evals completos (1 positivo + 1 negativo)"
+    ]
+    assert _evals_isencoes_fantasmas(indice, frozenset({"sumiu"})) == ["skill sumiu"]
 
 
 def test_sintetico_workflow_sem_mermaid_ou_sem_formato_valido_reprova():

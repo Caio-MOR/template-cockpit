@@ -1,0 +1,4 @@
+{"type":"system","subtype":"init","session_id":"fake-com-skill"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_1","name":"Skill","input":{"skill":"os-audit"}}]}}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Rodei a auditoria read-only do projeto."}]}}
+{"type":"result","subtype":"success","is_error":false,"result":"Rodei a auditoria read-only do projeto."}
