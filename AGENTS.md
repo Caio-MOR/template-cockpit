@@ -21,6 +21,7 @@ Categorias com conteúdo variável têm router local (`CLAUDE.md` dentro da past
 | Procurando... | Vá para |
 |---|---|
 | Rotina/automação agendada (SOP, grafo, scripts, logs) | `workflows/` (router lá; `_exemplo-rotina/` é o modelo a copiar) |
+| Eval de comportamento de uma skill (prova de que ela dispara/fica quieta) | `evals/_exemplo-skill/` (formato oficial de `claude plugin eval`: `prompt.md` + `graders/`), rodado por `tools/eval_runner.py --skills-dir .claude/skills`; `_exemplo-skill` é o modelo a copiar |
 | Script reutilizável (cliente de API, parser, gate) | `tools/` (router lá) |
 | App web solto (protótipo/utilitário) | `apps/` — uma pasta por app (router lá; nasce vazia — app com usuários e publicação própria vira repositório próprio na organização, e aqui fica só esta linha) |
 | Referência durável, handoff, dossiê, spec de design | `docs/` (router lá) |
@@ -50,6 +51,7 @@ Os 4 modos de falha que mais derrubam acerto. Siga à risca:
 - `python tools/lint_routers.py` — referências de todo `CLAUDE.md` (e `AGENTS.md`/`README.md`) contra o índice git, mais cobertura reversa de `workflows/` e `tools/`. Esperado: `0 erro(s)`.
 
 Ambos rodam no CI em todo push na main e PR (`.github/workflows/tests.yml`, matriz enxuta: ubuntu sempre, +windows só em PR; macOS semanal em `tests-macos.yml`). Rode local antes de mexer em router ou entregar código. Sem `.venv`: receita por sistema operacional no `README.md`.
+- `python tools/eval_runner.py --skills-dir .claude/skills` — evals de comportamento (prova de que uma skill dispara/fica quieta), gate **local**, não CI (sem credencial de subscription no runner do CI). `tests/test_evals_estrutura.py` (sem LLM) e `tests/test_criacao_nova.py` já rodam no CI e exigem que toda skill nova venha com uma pasta `evals/` (uma subpasta com o nome da skill, ver `evals/_exemplo-skill/`) (>= 1 positivo + 1 negativo).
 
 ## Regras globais
 
