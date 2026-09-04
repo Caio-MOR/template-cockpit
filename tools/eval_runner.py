@@ -1,18 +1,34 @@
 #!/usr/bin/env python3
 """Runner de bolso para evals de comportamento (formato oficial de `claude plugin eval`).
 
-`claude plugin eval` é early access habilitado por organização e não existe nesta
-instalação (Claude Code 2.1.191). Os casos deste repo, porém, já são escritos no
-formato oficial (`evals/<caso>/prompt.md` + `graders/<nome>.md`) para rodarem sem
-alteração no dia em que a flag abrir. Este runner lê esse mesmo formato e executa via
-`claude -p` com login de subscription (regra da casa: automação LLM via subscription,
-não API direta) — só a stdlib. Frontmatter é YAML **lite**, parseado à mão (mesma
-convenção do `tests/test_criacao_nova.py` deste repo: pyyaml não está no
-`requirements.txt`), suficiente para o que os casos usam (escalares e uma lista simples
-por linha, tipo `tags: [positivo]`).
+`claude plugin eval` existe no CLI (medido no 2.1.241) mas é early access habilitado
+por organização, e nesta conta responde `` `plugin eval` is currently in early access ``
+e sai. Os casos deste repo, porém, já são escritos no formato oficial
+(`evals/<caso>/prompt.md` + `graders/<nome>.md`) para rodarem sem alteração no dia em
+que a flag abrir. Reconferir o gate a cada `claude update`: `claude plugin eval` numa
+pasta vazia devolvendo `No eval cases found` significa habilitado.
+
+Este runner lê esse mesmo formato e executa via `claude -p` com login de subscription
+(regra da casa: automação LLM via subscription, não API direta) — sem nenhuma
+dependência externa, só a stdlib + PyYAML (já é dependência do `validar_plugins.py`).
 
 Cobre só o subconjunto de graders usado neste repo: `tool_used`, `regex`, `file_exists`.
 `llm` e `baseline` ficam para a ferramenta oficial.
+
+## Cópia canônica
+
+Duas cópias byte-idênticas deste arquivo existem, e este texto é uma delas: por isso
+ele nomeia os dois lados por caminho, em vez de dizer "aqui" ou "lá".
+
+- **Canônica**: `Caio-MOR/plugins` → `tools/eval_runner.py`. É onde se edita.
+- **Espelho**: `Caio-MOR/template-cockpit` → `tools/eval_runner.py`. Lá um gate compara
+  o `sha256` do arquivo com uma constante pinada, então editar o espelho reprova o
+  gate — que é o efeito desejado.
+
+Consequência: mudança na canônica não está concluída enquanto não for propagada para o
+espelho e o `sha256` pinado de lá não for recalculado, no mesmo PR. `RUNNER_VERSAO`
+sobe junto — patch para correção interna, minor para grader ou campo de saída novo,
+major para mudança de contrato de saída.
 
 ## Dois modos de descoberta
 
@@ -47,6 +63,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+import yaml
+
+RUNNER_VERSAO = "1.0.0"  # ver "Cópia canônica" na docstring: sobe junto da propagação
 TETO_CASOS_INFRA_CONSECUTIVOS = 3  # loop-engineering: nunca insistir além disso
 RE_FRONTMATTER = re.compile(r"\A---\s*\n(.*?)\n---\s*\n?", re.DOTALL)
 MARCADORES_AUTH = ("not logged in", "authentication_failed", "please run /login")
@@ -104,52 +123,14 @@ def descobrir_casos(evals_dir: Path, glob_filtro: str | None) -> list[Path]:
 # Parser do formato oficial (prompt.md + graders/*.md)
 
 
-def _valor_escalar(v: str):
-    v = v.strip()
-    if len(v) >= 2 and v[0] == v[-1] and v[0] in "'\"":
-        return v[1:-1]
-    if v.lower() in ("true", "false"):
-        return v.lower() == "true"
-    if v.lower() in ("null", "~", ""):
-        return None
-    try:
-        return int(v)
-    except ValueError:
-        pass
-    try:
-        return float(v)
-    except ValueError:
-        return v
-
-
-def _valor_yaml_lite(v: str):
-    v = v.strip()
-    if v.startswith("[") and v.endswith("]"):
-        interior = v[1:-1].strip()
-        return [] if not interior else [_valor_escalar(i) for i in interior.split(",")]
-    return _valor_escalar(v)
-
-
-def yaml_lite_load(bloco: str) -> dict:
-    """Frontmatter YAML **lite**: um `chave: valor` por linha, escalares e uma lista
-    simples (`tags: [a, b]`). Não é YAML de verdade (sem aninhamento, sem `|`/`>`,
-    sem múltiplas linhas por valor) — suficiente para `prompt.md`/`graders/*.md`
-    deste formato, e evita depender de pyyaml (fora do `requirements.txt` do template)."""
-    dados: dict = {}
-    for linha in bloco.splitlines():
-        linha_s = linha.strip()
-        if not linha_s or linha_s.startswith("#") or ":" not in linha_s:
-            continue
-        chave, _, valor = linha.partition(":")
-        dados[chave.strip()] = _valor_yaml_lite(valor)
-    return dados
-
-
 def parse_frontmatter(texto: str, origem: str) -> tuple[dict, str]:
     m = RE_FRONTMATTER.match(texto)
     if not m:
         raise ErroCasoMalFormado(f"{origem}: sem frontmatter (precisa começar com `---`)")
-    campos = yaml_lite_load(m.group(1))
+    try:
+        campos = yaml.safe_load(m.group(1)) or {}
+    except yaml.YAMLError as e:
+        raise ErroCasoMalFormado(f"{origem}: frontmatter YAML inválido ({e})") from e
     # Gotcha medido (2026-09-04, Windows): um corpo de prompt com quebra de linha
     # (parágrafo dobrado por legibilidade no .md) vira uma única entrada de
     # subprocess.run([...]), mas o CLI do claude é um wrapper .cmd — no Windows,

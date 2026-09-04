@@ -113,9 +113,15 @@ T32
 
 **Done when**:
 
-- [ ] `sha256` do arquivo idêntico ao do `plugins`
-- [ ] Nenhuma referência remanescente a `yaml_lite_load` no repo
-- [ ] `python -m pytest tests/test_eval_runner.py -q` verde no cockpit
+- [x] `sha256` do arquivo idêntico ao do `plugins`
+- [x] Nenhuma referência remanescente a `yaml_lite_load` no repo
+- [x] `python -m pytest tests/test_eval_runner.py -q` verde no cockpit
+
+**Achado:** `* text=auto` no `.gitattributes` dos dois repos faz a árvore de trabalho
+receber CRLF no Windows e LF no Linux. `sha256` sobre os bytes do disco seria vermelho
+num SO e verde no outro, então T4 pina o hash do conteúdo **normalizado em LF**, que é
+o que o repo guarda. Medido: bruto `1538888107b5…` (Windows), normalizado
+`0be4d2d8c8a0…` (igual em qualquer SO).
 
 **Tests**: unit de parse e de grader (matriz: Runner de eval)
 **Gate**: Unit
