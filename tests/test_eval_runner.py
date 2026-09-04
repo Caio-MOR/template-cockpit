@@ -193,6 +193,43 @@ def test_montar_comando_inclui_plugin_dir_quando_presente():
     assert str(Path("/tmp/plugin-x")) in cmd
 
 
+def _criar_caso_minimo(case_dir: Path, prompt: str = "oi") -> None:
+    case_dir.mkdir(parents=True)
+    (case_dir / "prompt.md").write_text(
+        "---\nname: " + case_dir.name + "\ntags: [positivo]\nruns: 1\n"
+        "max_turns: 1\ntimeout_seconds: 5\n---\n\n" + prompt + "\n",
+        encoding="utf-8",
+    )
+    graders_dir = case_dir / "graders"
+    graders_dir.mkdir()
+    (graders_dir / "disparo.md").write_text(
+        "---\ntype: tool_used\ninput_match: .*\nmin: 1\n---\n\njustificativa\n",
+        encoding="utf-8",
+    )
+
+
+def test_main_com_todos_runs_em_erro_de_infra_retorna_2(monkeypatch, tmp_path):
+    """R3(3): suíte pequena (2 casos), todos os runs falham por infra (ex.: sem
+    login) — não pode virar FAIL/exit 1, tem que ser exit 2 com mensagem clara."""
+    skills_dir = tmp_path / ".claude" / "skills" / "minha-skill"
+    skills_dir.mkdir(parents=True)
+    (skills_dir / "SKILL.md").write_text("---\nname: minha-skill\n---\n", encoding="utf-8")
+
+    _criar_caso_minimo(tmp_path / "evals" / "minha-skill" / "caso-1")
+    _criar_caso_minimo(tmp_path / "evals" / "minha-skill" / "caso-2")
+
+    monkeypatch.setattr(eval_runner.shutil, "which", lambda nome: "claude")
+
+    def _sempre_infra(*a, **k):
+        raise eval_runner.ErroInfra("não foi possível executar `claude`: falha simulada")
+
+    monkeypatch.setattr(eval_runner, "executar_run", _sempre_infra)
+    monkeypatch.chdir(tmp_path)
+
+    ret = eval_runner.main(["--skills-dir", str(tmp_path / ".claude" / "skills")])
+    assert ret == 2
+
+
 def test_montar_comando_sem_plugin_dir_no_modo_skills():
     cmd = eval_runner.montar_comando("claude", "oi", 3, None)
     assert "--plugin-dir" not in cmd

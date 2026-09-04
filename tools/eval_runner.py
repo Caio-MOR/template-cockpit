@@ -416,6 +416,15 @@ def main(argv: list[str] | None = None) -> int:
         print("eval_runner: nenhum caso encontrado", file=sys.stderr)
         return 2
 
+    nenhuma_transcricao_valida = all(
+        r["infra"] is not None for c in resultados_casos for r in c["runs"]
+    )
+    if nenhuma_transcricao_valida:
+        print("eval_runner: nenhum run produziu transcrição válida (todos falharam por "
+              "infraestrutura) — faça login no Claude Code antes de rodar (`claude /login`)",
+              file=sys.stderr)
+        return 2
+
     print(formatar_tabela(resultados_casos, args.threshold))
 
     if args.json:
