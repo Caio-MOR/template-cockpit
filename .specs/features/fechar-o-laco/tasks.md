@@ -93,9 +93,11 @@ T32
 
 **Done when**:
 
-- [ ] `RUNNER_VERSAO` existe e é string semântica
-- [ ] Docstring do módulo declara a cópia como canônica e nomeia o repo que espelha
-- [ ] `python -m pytest tests/test_eval_runner.py -q` verde
+- [x] `RUNNER_VERSAO` existe e é string semântica
+- [x] Docstring do módulo declara a cópia como canônica e nomeia o repo que espelha
+- [x] `python -m pytest tests/test_eval_runner.py -q` verde
+
+**Commit**: `Caio-MOR/plugins@2b3ddf2` (19 passed em `tests/test_eval_runner.py`, 31 na suíte)
 
 **Tests**: unit de parse e de grader (matriz: Runner de eval)
 **Gate**: Unit
