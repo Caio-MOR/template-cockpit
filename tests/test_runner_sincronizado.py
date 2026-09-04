@@ -71,6 +71,20 @@ def test_commit_upstream_e_sha_completo_de_git():
     assert all(c in "0123456789abcdef" for c in COMMIT_UPSTREAM), COMMIT_UPSTREAM
 
 
+def test_cabecalho_declara_a_natureza_de_atestacao():
+    """A declaração de atestação é asserida, não só escrita.
+
+    Sem esta asserção, apagar o parágrafo deixaria a suíte verde — e o gate
+    voltaria a se apresentar como prova. A verificação da Fase 1 apontou a
+    assimetria: no repo `plugins` o requisito gêmeo de docstring já é asserido.
+    """
+    doc = __doc__ or ""
+    assert "atestação, não prova" in doc, (
+        "o cabeçalho não declara que este gate é atestação, não prova"
+    )
+    assert "não tem rede" in doc, "o cabeçalho não diz por que não é prova"
+
+
 def test_sintetico_um_byte_diferente_reprova(tmp_path):
     """O gate morde: um byte trocado reprova, e a mensagem ensina o conserto.
 
