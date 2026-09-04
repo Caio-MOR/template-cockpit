@@ -9,7 +9,6 @@ ele, aprovar) e o teste do exit code 2 com `claude` ausente do PATH.
 from __future__ import annotations
 
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -24,7 +23,7 @@ import eval_runner  # noqa: E402
 
 def _carregar_transcricao(nome: str) -> list[dict]:
     texto = (FIXTURES / nome).read_text(encoding="utf-8")
-    return [json.loads(l) for l in texto.splitlines() if l.strip()]
+    return [json.loads(linha) for linha in texto.splitlines() if linha.strip()]
 
 
 # ---------------------------------------------------------------------------
